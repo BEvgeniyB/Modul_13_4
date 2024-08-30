@@ -1,25 +1,28 @@
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
-from aiogram.dispatcher.filters.state import State,StatesGroup
-from aiogram.dispatcher import FSMContext
-import asyncio
+from aiogram.dispatcher.filters.state import State, StatesGroup
 
-from aiogram.types.base import Float
+# from aiogram.dispatcher import FSMContext
+# import asyncio
+
 
 api = ''
 bot = Bot(token=api)
 dp = Dispatcher(bot, storage=MemoryStorage())
-data = dict()
+
+
 class UserState(StatesGroup):
     age = State()
     growth = State()
     weigth = State()
 
-def m_cg_for_women():
-    global data
-    calories = (10*float(data['weigth']) + 6.25*float(data['growth']) -
-                5*float(data['age']) - float(161))
+
+def m_cg_for_women(data):
+    calories = (10 * float(data['weigth']) + 6.25 * float(data['growth']) -
+                5 * float(data['age']) - float(161))
     return calories
+
+
 @dp.message_handler(text="Calories")
 async def set_age(message):
     await message.answer('Введите свой возраст:')
@@ -27,32 +30,25 @@ async def set_age(message):
 
 
 @dp.message_handler(state=UserState.age)
-async def set_growth(message,state):
-    global data
-    await state.update_data(age= message.text)
-    data = await state.get_data()
-    #await state.finish()
+async def set_growth(message, state):
+    await state.update_data(age=message.text)
     await message.answer('Введите свой рост в сантиметрах:')
     await UserState.growth.set()
 
+
 @dp.message_handler(state=UserState.growth)
-async def set_weight(message,state):
-    global data
-    await state.update_data(growth= message.text)
-    data = await state.get_data()
-    #await state.finish()
+async def set_weight(message, state):
+    await state.update_data(growth=message.text)
     await message.answer('Введите свой вес:')
     await UserState.weigth.set()
 
+
 @dp.message_handler(state=UserState.weigth)
-async def set_weight(message,state):
-    global data
-    await state.update_data(weigth= message.text)
+async def set_weight(message, state):
+    await state.update_data(weigth=message.text)
     data = await state.get_data()
     await state.finish()
-    await  message.answer(f'Суточная норма калорий равна : {m_cg_for_women()}')
-
-
+    await  message.answer(f'Суточная норма калорий равна : {m_cg_for_women(data)}')
 
 
 if __name__ == "__main__":
